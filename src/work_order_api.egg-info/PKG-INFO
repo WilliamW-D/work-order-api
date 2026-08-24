@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: work-order-api
+Version: 0.1.0
+Summary: FastAPI backend for equipment maintenance and work order management
+Requires-Python: >=3.11
+License-File: LICENSE
+Requires-Dist: fastapi
+Requires-Dist: uvicorn[standard]
+Requires-Dist: pydantic-settings
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: httpx; extra == "dev"
+Dynamic: license-file
