@@ -4,3 +4,7 @@ __pycache__/
 .env
 .pytest_cache/
 .coverage
+# Environment variables
+.env
+.env.*
+!.env.example
