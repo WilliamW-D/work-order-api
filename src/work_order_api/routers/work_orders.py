@@ -12,7 +12,10 @@ from fastapi import (
     status,
 )
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import (
+    Session,
+    selectinload,
+)
 
 from work_order_api.database import get_db
 from work_order_api.dependencies import get_current_user
@@ -22,11 +25,14 @@ from work_order_api.models import (
     User,
     UserRole,
     WorkOrder,
+    WorkOrderNote,
     WorkOrderStatus,
 )
 from work_order_api.schemas import (
     WorkOrderAssign,
     WorkOrderCreate,
+    WorkOrderNoteCreate,
+    WorkOrderNoteRead,
     WorkOrderRead,
     WorkOrderUpdate,
 )
@@ -430,3 +436,89 @@ def complete_work_order(
     database.refresh(work_order)
 
     return work_order
+
+@router.post(
+    "/{work_order_id}/notes",
+    response_model=WorkOrderNoteRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def add_work_order_note(
+    work_order_id: int,
+    note_data: WorkOrderNoteCreate,
+    database: Annotated[
+        Session,
+        Depends(get_db),
+    ],
+    current_user: Annotated[
+        User,
+        Depends(get_current_user),
+    ],
+) -> WorkOrderNote:
+    """Add a note to a work order."""
+
+    work_order = database.get(
+        WorkOrder,
+        work_order_id,
+    )
+
+    if work_order is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Work order not found.",
+        )
+
+    note = WorkOrderNote(
+        work_order_id=work_order.id,
+        author_id=current_user.id,
+        content=note_data.content.strip(),
+    )
+
+    database.add(note)
+    database.commit()
+    database.refresh(note)
+
+    return note
+
+
+@router.get(
+    "/{work_order_id}/notes",
+    response_model=list[WorkOrderNoteRead],
+)
+def list_work_order_notes(
+    work_order_id: int,
+    database: Annotated[
+        Session,
+        Depends(get_db),
+    ],
+    current_user: Annotated[
+        User,
+        Depends(get_current_user),
+    ],
+) -> list[WorkOrderNote]:
+    """Return notes for a work order."""
+
+    work_order = database.get(
+        WorkOrder,
+        work_order_id,
+    )
+
+    if work_order is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Work order not found.",
+        )
+
+    statement = (
+        select(WorkOrderNote)
+        .where(
+            WorkOrderNote.work_order_id
+            == work_order_id
+        )
+        .order_by(
+            WorkOrderNote.created_at.asc()
+        )
+    )
+
+    return list(
+        database.scalars(statement).all()
+    )

@@ -10,7 +10,10 @@ from fastapi import (
 )
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import (
+    Session,
+    selectinload,
+)
 
 from work_order_api.database import get_db
 from work_order_api.dependencies import get_current_user
@@ -18,9 +21,11 @@ from work_order_api.models import (
     Asset,
     AssetStatus,
     User,
+    WorkOrder,
 )
 from work_order_api.schemas import (
     AssetCreate,
+    AssetHistoryItem,
     AssetRead,
     AssetUpdate,
 )
@@ -332,4 +337,47 @@ def retire_asset(
 
     return Response(
         status_code=status.HTTP_204_NO_CONTENT,
+    )
+
+@router.get(
+    "/{asset_id}/history",
+    response_model=list[AssetHistoryItem],
+)
+def get_asset_history(
+    asset_id: int,
+    database: Annotated[
+        Session,
+        Depends(get_db),
+    ],
+) -> list[WorkOrder]:
+    """Return maintenance history for an asset."""
+
+    asset = database.get(
+        Asset,
+        asset_id,
+    )
+
+    if asset is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Asset not found.",
+        )
+
+    statement = (
+        select(WorkOrder)
+        .options(
+            selectinload(
+                WorkOrder.notes
+            )
+        )
+        .where(
+            WorkOrder.asset_id == asset_id
+        )
+        .order_by(
+            WorkOrder.created_at.desc()
+        )
+    )
+
+    return list(
+        database.scalars(statement).all()
     )
