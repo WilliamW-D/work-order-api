@@ -187,3 +187,36 @@ class WorkOrderRead(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
+
+class WorkOrderNoteCreate(BaseModel):
+    content: str = Field(
+        min_length=2,
+        max_length=5000,
+    )
+
+
+class WorkOrderNoteRead(BaseModel):
+    id: int
+    work_order_id: int
+    author_id: int
+    content: str
+    created_at: datetime
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class AssetHistoryItem(BaseModel):
+    id: int
+    title: str
+    priority: WorkOrderPriority
+    status: WorkOrderStatus
+    assigned_to_id: int | None
+    created_at: datetime
+    completed_at: datetime | None
+    notes: list[WorkOrderNoteRead]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
