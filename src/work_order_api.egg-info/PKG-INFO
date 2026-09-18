@@ -7,6 +7,13 @@ License-File: LICENSE
 Requires-Dist: fastapi
 Requires-Dist: uvicorn[standard]
 Requires-Dist: pydantic-settings
+Requires-Dist: sqlalchemy<3,>=2.0
+Requires-Dist: psycopg[binary]<4,>=3.2
+Requires-Dist: alembic<2,>=1.13
+Requires-Dist: PyJWT
+Requires-Dist: pwdlib[argon2]
+Requires-Dist: python-multipart
+Requires-Dist: email-validator
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
 Requires-Dist: httpx; extra == "dev"
