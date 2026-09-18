@@ -8,6 +8,7 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
+    Path,
     Query,
     status,
 )
@@ -318,7 +319,10 @@ def list_work_orders(
     response_model=WorkOrderRead,
 )
 def get_work_order(
-    work_order_id: int,
+    work_order_id: Annotated[
+        int,
+        Path(gt=0),
+    ],
     database: Annotated[
         Session,
         Depends(get_db),
@@ -347,7 +351,10 @@ def get_work_order(
     response_model=WorkOrderRead,
 )
 def update_work_order(
-    work_order_id: int,
+    work_order_id: Annotated[
+        int,
+        Path(gt=0),
+    ],
     work_order_data: WorkOrderUpdate,
     database: Annotated[
         Session,
@@ -416,7 +423,10 @@ def update_work_order(
     response_model=WorkOrderRead,
 )
 def assign_work_order(
-    work_order_id: int,
+    work_order_id: Annotated[
+        int,
+        Path(gt=0),
+    ],
     assignment: WorkOrderAssign,
     database: Annotated[
         Session,
@@ -467,7 +477,10 @@ def assign_work_order(
     response_model=WorkOrderRead,
 )
 def complete_work_order(
-    work_order_id: int,
+    work_order_id: Annotated[
+        int,
+        Path(gt=0),
+    ],
     database: Annotated[
         Session,
         Depends(get_db),
@@ -519,7 +532,10 @@ def complete_work_order(
     status_code=status.HTTP_201_CREATED,
 )
 def add_work_order_note(
-    work_order_id: int,
+    work_order_id: Annotated[
+        int,
+        Path(gt=0),
+    ],
     note_data: WorkOrderNoteCreate,
     database: Annotated[
         Session,
@@ -561,7 +577,10 @@ def add_work_order_note(
     response_model=list[WorkOrderNoteRead],
 )
 def list_work_order_notes(
-    work_order_id: int,
+    work_order_id: Annotated[
+        int,
+        Path(gt=0),
+    ],
     database: Annotated[
         Session,
         Depends(get_db),
@@ -598,4 +617,5 @@ def list_work_order_notes(
     return list(
         database.scalars(statement).all()
     )
+
 

@@ -4,6 +4,7 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
+    Path,
     Query,
     Response,
     status,
@@ -250,7 +251,10 @@ def list_assets(
     response_model=AssetRead,
 )
 def get_asset(
-    asset_id: int,
+    asset_id: Annotated[
+        int,
+        Path(gt=0),
+    ],
     database: Annotated[
         Session,
         Depends(get_db),
@@ -277,7 +281,10 @@ def get_asset(
     response_model=AssetRead,
 )
 def update_asset(
-    asset_id: int,
+    asset_id: Annotated[
+        int,
+        Path(gt=0),
+    ],
     asset_data: AssetUpdate,
     database: Annotated[
         Session,
@@ -386,7 +393,10 @@ def update_asset(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 def retire_asset(
-    asset_id: int,
+    asset_id: Annotated[
+        int,
+        Path(gt=0),
+    ],
     database: Annotated[
         Session,
         Depends(get_db),
@@ -418,7 +428,10 @@ def retire_asset(
     response_model=list[AssetHistoryItem],
 )
 def get_asset_history(
-    asset_id: int,
+    asset_id: Annotated[
+        int,
+        Path(gt=0),
+    ],
     database: Annotated[
         Session,
         Depends(get_db),
@@ -455,4 +468,5 @@ def get_asset_history(
     return list(
         database.scalars(statement).all()
     )
+
 
