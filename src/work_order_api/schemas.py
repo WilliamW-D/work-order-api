@@ -5,6 +5,7 @@ from pydantic import (
     ConfigDict,
     EmailStr,
     Field,
+    field_validator,
 )
 
 from work_order_api.models import (
@@ -76,6 +77,30 @@ class AssetCreate(BaseModel):
         default=None,
         max_length=255,
     )
+    @field_validator(
+        "name",
+        "asset_tag",
+        "manufacturer",
+        "model",
+        "serial_number",
+        "location",
+    )
+    @classmethod
+    def strip_strings(
+        cls,
+        value: str | None,
+    ) -> str | None:
+        if value is None:
+            return None
+
+        value = value.strip()
+
+        if not value:
+            raise ValueError(
+                "Value cannot be blank."
+            )
+
+        return value
 
 
 class AssetUpdate(BaseModel):
@@ -110,6 +135,30 @@ class AssetUpdate(BaseModel):
         default=None,
         max_length=255,
     )
+    @field_validator(
+        "name",
+        "asset_tag",
+        "manufacturer",
+        "model",
+        "serial_number",
+        "location",
+    )
+    @classmethod
+    def strip_strings(
+        cls,
+        value: str | None,
+    ) -> str | None:
+        if value is None:
+            return None
+
+        value = value.strip()
+
+        if not value:
+            raise ValueError(
+                "Value cannot be blank."
+            )
+
+        return value
 
     status: AssetStatus | None = None
 
@@ -145,6 +194,23 @@ class WorkOrderCreate(BaseModel):
     priority: WorkOrderPriority = WorkOrderPriority.MEDIUM
 
     assigned_to_id: int | None = None
+    @field_validator(
+        "title",
+        "description",
+    )
+    @classmethod
+    def strip_strings(
+        cls,
+        value: str,
+    ) -> str:
+        value = value.strip()
+
+        if not value:
+            raise ValueError(
+                "Value cannot be blank."
+            )
+
+        return value
 
 
 class WorkOrderUpdate(BaseModel):
@@ -162,6 +228,26 @@ class WorkOrderUpdate(BaseModel):
     priority: WorkOrderPriority | None = None
 
     status: WorkOrderStatus | None = None
+    @field_validator(
+        "title",
+        "description",
+    )
+    @classmethod
+    def strip_strings(
+        cls,
+        value: str | None,
+    ) -> str | None:
+        if value is None:
+            return None
+
+        value = value.strip()
+
+        if not value:
+            raise ValueError(
+                "Value cannot be blank."
+            )
+
+        return value
 
 
 class WorkOrderAssign(BaseModel):
@@ -220,3 +306,20 @@ class AssetHistoryItem(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
+
+class PaginationMeta(BaseModel):
+    total: int
+    limit: int
+    offset: int
+
+
+class AssetListResponse(BaseModel):
+    items: list[AssetRead]
+    pagination: PaginationMeta
+
+
+class WorkOrderListResponse(BaseModel):
+    items: list[WorkOrderRead]
+    pagination: PaginationMeta
+
+

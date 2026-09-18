@@ -8,7 +8,11 @@ from fastapi import (
     Response,
     status,
 )
-from sqlalchemy import select
+from sqlalchemy import (
+    func,
+    or_,
+    select,
+)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import (
     Session,
@@ -26,8 +30,10 @@ from work_order_api.models import (
 from work_order_api.schemas import (
     AssetCreate,
     AssetHistoryItem,
+    AssetListResponse,
     AssetRead,
     AssetUpdate,
+    PaginationMeta,
 )
 
 
@@ -137,7 +143,7 @@ def create_asset(
 
 @router.get(
     "",
-    response_model=list[AssetRead],
+    response_model=AssetListResponse,
 )
 def list_assets(
     database: Annotated[
@@ -157,18 +163,86 @@ def list_assets(
             ge=0,
         ),
     ] = 0,
-) -> list[Asset]:
-    """Return a paginated list of assets."""
+    asset_status: Annotated[
+        AssetStatus | None,
+        Query(alias="status"),
+    ] = None,
+    location: Annotated[
+        str | None,
+        Query(
+            min_length=1,
+            max_length=255,
+        ),
+    ] = None,
+    search: Annotated[
+        str | None,
+        Query(
+            min_length=1,
+            max_length=100,
+        ),
+    ] = None,
+) -> AssetListResponse:
+    """Return filtered and paginated assets."""
+
+    filters = []
+
+    if asset_status is not None:
+        filters.append(
+            Asset.status == asset_status
+        )
+
+    if location:
+        filters.append(
+            Asset.location.ilike(
+                f"%{location.strip()}%"
+            )
+        )
+
+    if search:
+        search_term = (
+            f"%{search.strip()}%"
+        )
+        
+        filters.append(
+            or_(
+                Asset.name.ilike(search_term),
+                Asset.asset_tag.ilike(search_term),
+                Asset.manufacturer.ilike(search_term),
+                Asset.model.ilike(search_term),
+                Asset.serial_number.ilike(search_term),
+            )
+        )
+
+    count_statement = (
+        select(
+            func.count(Asset.id)
+        )
+        .where(*filters)
+    )
+
+    total = database.scalar(
+        count_statement
+    ) or 0
 
     statement = (
         select(Asset)
+        .where(*filters)
         .order_by(Asset.id)
         .offset(offset)
         .limit(limit)
     )
 
-    return list(
+    assets = list(
         database.scalars(statement).all()
+    )
+
+    return AssetListResponse(
+        items=assets,
+        pagination=PaginationMeta(
+            total=total,
+            limit=limit,
+            offset=offset,
+        ),
     )
 
 @router.get(
@@ -381,3 +455,4 @@ def get_asset_history(
     return list(
         database.scalars(statement).all()
     )
+

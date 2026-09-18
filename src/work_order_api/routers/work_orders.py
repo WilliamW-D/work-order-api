@@ -11,7 +11,10 @@ from fastapi import (
     Query,
     status,
 )
-from sqlalchemy import select
+from sqlalchemy import (
+    func,
+    select,
+)
 from sqlalchemy.orm import (
     Session,
     selectinload,
@@ -26,11 +29,14 @@ from work_order_api.models import (
     UserRole,
     WorkOrder,
     WorkOrderNote,
+    WorkOrderPriority,
     WorkOrderStatus,
 )
 from work_order_api.schemas import (
+    PaginationMeta,
     WorkOrderAssign,
     WorkOrderCreate,
+    WorkOrderListResponse,
     WorkOrderNoteCreate,
     WorkOrderNoteRead,
     WorkOrderRead,
@@ -197,7 +203,7 @@ def create_work_order(
 
 @router.get(
     "",
-    response_model=list[WorkOrderRead],
+    response_model=WorkOrderListResponse,
 )
 def list_work_orders(
     database: Annotated[
@@ -221,11 +227,72 @@ def list_work_orders(
             ge=0,
         ),
     ] = 0,
-) -> list[WorkOrder]:
-    """Return a paginated list of work orders."""
+    work_order_status: Annotated[
+        WorkOrderStatus | None,
+        Query(alias="status"),
+    ] = None,
+    priority: WorkOrderPriority | None = None,
+    asset_id: Annotated[
+        int | None,
+        Query(gt=0),
+    ] = None,
+    assigned_to_id: Annotated[
+        int | None,
+        Query(gt=0),
+    ] = None,
+    created_by_id: Annotated[
+        int | None,
+        Query(gt=0),
+    ] = None,
+) -> WorkOrderListResponse:
+    """Return filtered and paginated work orders."""
+
+    filters = []
+
+    if work_order_status is not None:
+        filters.append(
+            WorkOrder.status
+            == work_order_status
+        )
+
+    if priority is not None:
+        filters.append(
+            WorkOrder.priority
+            == priority
+        )
+
+    if asset_id is not None:
+        filters.append(
+            WorkOrder.asset_id
+            == asset_id
+        )
+
+    if assigned_to_id is not None:
+        filters.append(
+            WorkOrder.assigned_to_id
+            == assigned_to_id
+        )
+
+    if created_by_id is not None:
+        filters.append(
+            WorkOrder.created_by_id
+            == created_by_id
+        )
+
+    count_statement = (
+        select(
+            func.count(WorkOrder.id)
+        )
+        .where(*filters)
+    )
+
+    total = database.scalar(
+        count_statement
+    ) or 0
 
     statement = (
         select(WorkOrder)
+        .where(*filters)
         .order_by(
             WorkOrder.created_at.desc()
         )
@@ -233,8 +300,17 @@ def list_work_orders(
         .limit(limit)
     )
 
-    return list(
+    work_orders = list(
         database.scalars(statement).all()
+    )
+
+    return WorkOrderListResponse(
+        items=work_orders,
+        pagination=PaginationMeta(
+            total=total,
+            limit=limit,
+            offset=offset,
+        ),
     )
 
 @router.get(
@@ -522,3 +598,4 @@ def list_work_order_notes(
     return list(
         database.scalars(statement).all()
     )
+
