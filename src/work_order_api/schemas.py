@@ -10,6 +10,8 @@ from pydantic import (
 from work_order_api.models import (
     AssetStatus,
     UserRole,
+    WorkOrderPriority,
+    WorkOrderStatus,
 )
 
 
@@ -123,6 +125,64 @@ class AssetRead(BaseModel):
     status: AssetStatus
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+class WorkOrderCreate(BaseModel):
+    asset_id: int
+
+    title: str = Field(
+        min_length=3,
+        max_length=200,
+    )
+
+    description: str = Field(
+        min_length=3,
+    )
+
+    priority: WorkOrderPriority = WorkOrderPriority.MEDIUM
+
+    assigned_to_id: int | None = None
+
+
+class WorkOrderUpdate(BaseModel):
+    title: str | None = Field(
+        default=None,
+        min_length=3,
+        max_length=200,
+    )
+
+    description: str | None = Field(
+        default=None,
+        min_length=3,
+    )
+
+    priority: WorkOrderPriority | None = None
+
+    status: WorkOrderStatus | None = None
+
+
+class WorkOrderAssign(BaseModel):
+    user_id: int
+
+
+class WorkOrderRead(BaseModel):
+    id: int
+    asset_id: int
+    created_by_id: int
+    assigned_to_id: int | None
+
+    title: str
+    description: str
+
+    priority: WorkOrderPriority
+    status: WorkOrderStatus
+
+    created_at: datetime
+    updated_at: datetime
+    completed_at: datetime | None
 
     model_config = ConfigDict(
         from_attributes=True,

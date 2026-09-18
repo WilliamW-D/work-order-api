@@ -13,6 +13,7 @@ from work_order_api.routers import (
     assets,
     auth,
     users,
+    work_orders,
 )
 
 app = FastAPI(
@@ -27,6 +28,7 @@ app = FastAPI(
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(assets.router)
+app.include_router(work_orders.router)
 
 @app.get("/")
 def root() -> dict[str, str]:
