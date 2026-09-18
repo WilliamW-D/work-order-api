@@ -10,6 +10,7 @@ from work_order_api.database import (
     check_database_connection,
 )
 from work_order_api.routers import (
+    assets,
     auth,
     users,
 )
@@ -25,6 +26,7 @@ app = FastAPI(
 
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(assets.router)
 
 @app.get("/")
 def root() -> dict[str, str]:
