@@ -1,6 +1,13 @@
 fastapi
 uvicorn[standard]
 pydantic-settings
+sqlalchemy<3,>=2.0
+psycopg[binary]<4,>=3.2
+alembic<2,>=1.13
+PyJWT
+pwdlib[argon2]
+python-multipart
+email-validator
 
 [dev]
 pytest

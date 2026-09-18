@@ -10,8 +10,12 @@ class Settings(BaseSettings):
 
     app_name: str = "Work Order Management API"
     environment: str = "development"
-    
+
     database_url: str
+
+    jwt_secret_key: str
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -22,7 +26,6 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    """Return cached application settings."""
     return Settings()
 
 settings = get_settings()
