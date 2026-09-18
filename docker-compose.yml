@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: workorder_app
+      POSTGRES_PASSWORD: workorder_password
+      POSTGRES_DB: work_orders
+      
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U workorder_app -d work_orders"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+      
+    environment:
+      DATABASE_URL: postgresql+psycopg://workorder_app:workorder_password@postgres:5432/work_orders
+      JWT_SECRET_KEY: local-docker-development-secret
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      
+    depends_on:
+      postgres:
+        condition: service_healthy
+        
+    command: >
+      sh -c "
+      alembic upgrade head &&
+      uvicorn work_order_api.main:app
+        --host 0.0.0.0
+        --port 8000
+      "
+
+volumes:
+  postgres_data:
