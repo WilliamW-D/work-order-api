@@ -1,10 +1,11 @@
 .venv/
 __pycache__/
 *.pyc
-.env
 .pytest_cache/
 .coverage
+
 # Environment variables
 .env
 .env.*
 !.env.example
+!.env.test.example
