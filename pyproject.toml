@@ -12,6 +12,8 @@ dependencies = [
     "fastapi",
     "uvicorn[standard]",
     "pydantic-settings",
+    "sqlalchemy>=2.0,<3",
+    "psycopg[binary]>=3.2,<4",
 ]
 
 [project.optional-dependencies]
