@@ -6,6 +6,8 @@ The project demonstrates production-oriented backend concepts including PostgreS
 
 [![API Tests](https://github.com/WilliamW-D/work-order-api/actions/workflows/tests.yml/badge.svg)](https://github.com/WilliamW-D/work-order-api/actions/workflows/tests.yml)
 
+**Frontend Dashboard**: [Maintenance Operations Dashboard](https://github.com/WilliamW-D/maintenance-ops-dashboard)
+
 ![Work Order API Swagger interface](docs/swagger-api.png)
 
 ## Features
